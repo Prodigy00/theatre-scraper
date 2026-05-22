@@ -1,0 +1,12 @@
+[project]
+name = "theatre-scraper"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx>=0.28.1",
+    "pandas>=3.0.3",
+    "pydantic>=2.13.4",
+    "selectolax>=0.4.9",
+]
