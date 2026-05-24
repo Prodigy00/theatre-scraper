@@ -299,13 +299,6 @@ The parser currently uses heuristic normalization rather than a fully semantic e
 
 ## Improve Schedule Extraction
 
-* build a dedicated theatre scheduling parser
-* support multiple performances per day
-* support matinee/evening schedule matrices
-* infer missing years/months more intelligently
-
----
-
 ## Improve Reliability
 
 * add snapshot tests using real production pages
