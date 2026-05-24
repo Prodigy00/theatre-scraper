@@ -3,10 +3,16 @@ name = "theatre-scraper"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.14.3",
     "httpx>=0.28.1",
     "pandas>=3.0.3",
     "pydantic>=2.13.4",
-    "selectolax>=0.4.9",
+    "python-dateutil>=2.9.0.post0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
 ]
