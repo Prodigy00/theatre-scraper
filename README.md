@@ -147,7 +147,7 @@ output.csv
 ## 4. Run validator
 
 ```bash
-python src/utils/csv_validator.py output.csv
+python src/csv_validator.py output.csv
 ```
 
 ---
