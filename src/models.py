@@ -56,11 +56,13 @@ class TheatreShow(BaseModel):
 
     @field_validator("category")
     @classmethod
-    def validate_category(cls, v:str) -> str:
+    def validate_category(cls, v:str) -> Optional[Category]:
         cleaned = v.strip()
-        if cleaned and cleaned not in ("Musical", "Play"):
-            return ""
-        return cleaned
+        if cleaned == "Musical":
+            return Category.MUSICAL
+        elif cleaned == "Play":
+            return Category.PLAY
+        return Category.BLANK
     
     @field_validator("currency")
     @classmethod
@@ -89,8 +91,8 @@ class TheatreShow(BaseModel):
         raw_data = handler(self)
         perf_list = [perf.model_dump() for perf in self.upcoming_performances]
 
-        # Enforce Rule 17: Format complex fields as single-quoted Python literals.
-        # repr() on standard Python dicts/lists outputs single quotes natively.
+        #Enforce Rule 17: Format complex fields as single-quoted Python literals.
+        #repr() on standard Python dicts/lists outputs single quotes natively.
         raw_data["upcoming_performances"] = repr(perf_list)
         raw_data["seat_pricing"] = repr(raw_data["seat_pricing"])
 
