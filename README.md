@@ -149,6 +149,11 @@ output.csv
 ```bash
 python src/csv_validator.py output.csv
 ```
+or
+
+```bash
+uv run src/csv_validator.py output.csv
+```
 
 ---
 
