@@ -1,5 +1,6 @@
 import re 
 import logging
+from models import Category
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from bs4 import BeautifulSoup
@@ -11,6 +12,10 @@ def _clean_date_text(raw_text: str) -> str:
     """
     Removes marketing/UI noise from scraped date blocks.
     """
+    #this regex fixes cases like "& 3.30pm, Monday 10th August 2026"
+    date_text = re.sub(r"\s*&\s*", " ", raw_text)
+    date_text = re.sub(r"\s{2,}", " ", date_text)
+    date_text = date_text.strip(",;:- ").strip()
 
     if not raw_text:
         return ""
@@ -23,7 +28,7 @@ def _clean_date_text(raw_text: str) -> str:
 
     #Remove pricing
     text = re.sub(
-        r"Price:\s*£\s?\d+(?:\.\d{2})?(?:\s?-\s?£?\d+(?:\.\d{2})?)?",
+        r"Price:.*",
         "",
         text,
         flags=re.IGNORECASE
@@ -150,9 +155,9 @@ class MalthouseParser:
         #map categories
         category = ""
         if ": music" in body_text_lower or "opera" in body_text_lower:
-            category = "Musical"
+            category = Category.MUSICAL
         elif ": theatre" in body_text_lower or "drama" in body_text_lower or "comedy" in body_text_lower:
-            category = "Play"
+            category = Category.PLAY
 
 
         date_text = ""
@@ -177,7 +182,7 @@ class MalthouseParser:
         normalized_time = "19:30" # Baseline default fallback time
 
         #check for mashed inline times (e.g. "Sunday 24th May 2026 7.30PM")
-        clock_match = re.search(r"(\d{1,2}[:.]\d{2}\s*(?:pm|am)?|\b\d{1,2}\s*(?:pm|am)\b)", date_text, re.IGNORECASE)
+        clock_match = re.search(r"(\b\d{1,2}[:.]\d{2}\s*(?:am|pm)\b|\b\d{1,2}\s*(?:am|pm)\b)", date_text, re.IGNORECASE)
         if clock_match:
             raw_time_string = clock_match.group(1)
             normalized_time = _normalize_time(raw_time_string)
@@ -188,10 +193,28 @@ class MalthouseParser:
         open_date_raw = ""
         close_date_raw = ""
 
-        split_dates = re.split(r"[-–—]", date_text)
+        split_dates = re.split(r"\s+[–—-]\s+", date_text)
+
         if len(split_dates) > 1:
             open_date_raw = split_dates[0].strip()
             close_date_raw = split_dates[1].strip()
+           
+            # If first date lacks month/year, inherit from second date
+            close_month_year = re.search(
+                r"([A-Za-z]+)\s+(20\d{2})",
+                close_date_raw
+            )
+
+            if close_month_year:
+                month = close_month_year.group(1)
+                year = close_month_year.group(2)
+
+                if not re.search(r"[A-Za-z]+", open_date_raw):
+                    open_date_raw = f"{open_date_raw} {month}"
+
+                if not re.search(r"\b20\d{2}\b", open_date_raw):
+                    open_date_raw = f"{open_date_raw} {year}"
+
         elif len(split_dates) == 1:
             open_date_raw = close_date_raw = split_dates[0].strip()
         
@@ -222,7 +245,7 @@ class MalthouseParser:
                     break
                     
             if time_text:
-                fallback_clock_match = re.search(r"(\d{1,2}[:.]\d{2}\s*(?:pm|am)?|\b\d{1,2}\s*(?:pm|am)\b)", time_text, re.IGNORECASE)
+                fallback_clock_match = re.search(r"(\b\d{1,2}[:.]\d{2}\s*(?:am|pm)\b|\b\d{1,2}\s*(?:am|pm)\b)", time_text, re.IGNORECASE)
                 if fallback_clock_match:
                     normalized_time = _normalize_time(fallback_clock_match.group(1))
 
